@@ -41,7 +41,7 @@ if(mkdisk==true){
         size = true;
     }else if(size==true){
         tamanio=atoi(token);
-        printf("el tamnio del disco es %d\n",tamanio);
+        //printf("el tamnio del disco es %d\n",tamanio);
         size=false;
     }
     //comando nombre
@@ -51,7 +51,7 @@ if(mkdisk==true){
 
      strcpy(auxnombre,token);
 
-        printf("el nombre del disco es %s\n",auxnombre);
+        //printf("el nombre del disco es %s\n",auxnombre);
         name=false;
     }
         //comando path
@@ -61,18 +61,23 @@ if(mkdisk==true){
 
 strcpy(auxpath,token);
 //token=strtok(NULL,"\"");
-        printf("el path del disco es %s\n",auxpath);
+        //printf("el path del disco es %s\n",auxpath);
         pat=false;
 //auxpath=strtok(NULL,"\"");
     }
 
+}
+
+//termina comando mkdisk
+//printf("%s\n",token);
+token = strtok(NULL," ::");
+
+}
 if(mkdisk==true&&auxnombre!=""&&auxpath!=""&&tamanio!=-1){
-if(creararchivo==false){
-creararchivo=true;}
-else{
+
 int i=1;
 archivo = fopen (strcat(auxpath,auxnombre), "wb+");
-//mkdisk -name::archivo.bin -size::50 -path::/home/javier/Documents/Archivos:V/-MIA-201313819/Proyecto/
+//mkdisk -name::archivo.bin -size::100 -path::/home/javier/Documents/Archivos:V/-MIA-201313819/Proyecto/
  //fprintf(archivo, "\%d",i);
 
    //fclose(archivo);
@@ -89,17 +94,11 @@ mkdisk=false;
 tamanio=-1;
 strcpy(auxnombre,"");
 strcpy(auxpath,"");
-}
-
-}
-}
-
-//termina comando mkdisk
-//printf("%s\n",token);
-token = strtok(NULL," ::");
-
-}
 strcpy(comando,"");
+
+}
+
+
 }
 }
 
