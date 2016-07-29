@@ -21,6 +21,7 @@ char auxpath[100]="";
 bool size=false;
 bool pat = false;
 bool name = false;
+bool creararchivo=false;
 while(a==0){
 fgets(comando,200,stdin);
 
@@ -29,7 +30,7 @@ char* token;
 token  = strtok(comando," ");
 while(token!=NULL){
 if(strcasecmp(token,"mkdisk")==0){
-printf("se encontro mkdisk\n");
+printf("Comando: mkdisk\n");
 mkdisk=true;
 }
 
@@ -66,30 +67,39 @@ strcpy(auxpath,token);
     }
 
 if(mkdisk==true&&auxnombre!=""&&auxpath!=""&&tamanio!=-1){
-strcat(auxpath,"/");
-strcat(auxpath,auxnombre);
-strcat(auxpath,".bin");
-printf(auxpath);
-
+if(creararchivo==false){
+creararchivo=true;}
+else{
 int i=1;
-//archivo=fopen(auxpath,"w+b");
-/*
+archivo = fopen (strcat(auxpath,auxnombre), "wb+");
+//mkdisk -name::archivo.bin -size::50 -path::/home/javier/Documents/Archivos:V/-MIA-201313819/Proyecto/
+ //fprintf(archivo, "\%d",i);
+
+   //fclose(archivo);
+
 char pribin[3]="\0";
+//tamaño del disco
 for(i;i<=tamanio;i++){
 fwrite(pribin,1,sizeof(pribin),archivo);
 fseek(archivo,i,SEEK_SET);
 }
-*/
-//fclose(archivo);
-
+fclose(archivo);
+creararchivo=false;
+mkdisk=false;
+tamanio=-1;
+strcpy(auxnombre,"");
+strcpy(auxpath,"");
+}
 
 }
 }
 
+//termina comando mkdisk
 //printf("%s\n",token);
 token = strtok(NULL," ::");
 
 }
+strcpy(comando,"");
 }
 }
 
