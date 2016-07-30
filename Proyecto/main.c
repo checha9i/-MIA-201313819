@@ -65,14 +65,6 @@ strcpy(auxpath,token);
         pat=false;
 //auxpath=strtok(NULL,"\"");
     }
-
-}
-
-//termina comando mkdisk
-//printf("%s\n",token);
-token = strtok(NULL," ::");
-
-}
 if(mkdisk==true&&auxnombre!=""&&auxpath!=""&&tamanio!=-1){
 
 int i=1;
@@ -97,6 +89,14 @@ strcpy(auxpath,"");
 strcpy(comando,"");
 
 }
+}
+
+//termina comando mkdisk
+//printf("%s\n",token);
+token = strtok(NULL," ::");
+
+}
+
 
 
 }
