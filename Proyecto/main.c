@@ -10,7 +10,7 @@ typedef struct mkdiskc{
     char auxnombre[25];
     char auxpath[100];
     int tamanio;
-    char unidad;
+    char unidad[1];
 }mkdiskc;
 
 
@@ -75,10 +75,9 @@ mkdiskc *  nuevo=malloc(sizeof(mkdiskc));
                 //atributo unit
                 if(strcasecmp(token,"+unit")==0){
                     unitb = true;
-                    nuevo->unidad='m';
+                    strcpy(nuevo->unidad,"m");
                 }else if(unitb==true){
                     strcpy(nuevo->unidad,token);
-
                     unitb=false;
                 }
 
@@ -91,20 +90,18 @@ mkdiskc *  nuevo=malloc(sizeof(mkdiskc));
         }
 
         if(mkdisk==true&&nuevo->auxnombre!=""&&nuevo->auxpath!=""&&nuevo->tamanio>0){
-        if(unidad=='k'){
-            nuevo->tamanio=nuevo->tamanio*1024;
+            if(strcasecmp(nuevo->unidad,"k")==0){
+                nuevo->tamanio=nuevo->tamanio*1024;
         }
-        else if(unidad=='m'){
+    else if(strcasecmp(nuevo->unidad,"m")==0){
             nuevo->tamanio=nuevo->tamanio*1024*1024;
-        }else{
-                nuevo->tamanio=nuevo->tamanio*1024*1024;
         }
             printf("atributos listos:\n %s,%s,%d",nuevo->auxnombre,nuevo->auxpath,nuevo->tamanio);
 
         int i=1;
         archivo = fopen (strcat(nuevo->auxpath,nuevo->auxnombre), "wb+");
-        //mkdisk -name::archivo.bin -size::1 +unit::k -path::/home/javier/Desktop/
-        //mkdisk -name::"archivo.bin" -size::5 -path::"/home/javier/Desktop/"
+        //mkdisk -name::archivo.bin -size::10 +unit::k -path::/home/javier/Desktop/
+        //mkdisk -name::archivo.bin -size::5 -path::/home/javier/Desktop/
          //fprintf(archivo,"\%d",i);
 
            //fclose(archivo);
