@@ -12,6 +12,9 @@ typedef struct mkdiskc{
     int tamanio;
     char unidad[1];
 }mkdiskc;
+typedef struct rmdiskc{
+    char auxpath[100];
+}rmdiskc;
 
 
 int main()
@@ -24,7 +27,9 @@ void compiler(){
     int a=0;
 
     bool mkdisk=false;
+    bool rmdisk=false;
 mkdiskc *  nuevo=malloc(sizeof(mkdiskc));
+rmdiskc *  removernodo=malloc(sizeof(rmdiskc));
 
     char unidad;
     bool size=false;
@@ -82,11 +87,35 @@ mkdiskc *  nuevo=malloc(sizeof(mkdiskc));
                 }
 
             }
-
             //termina comando mkdisk
+
+            //comando rmdisk
+            if(strcasecmp(token,"rmDisk")==0){
+                printf("Comando: rmDisk\n");
+                rmdisk=true;
+            }
+            if(rmdisk==true){
+                if(strcasecmp(token,"-path")==0){
+                    pat = true;
+                }else if(pat==true){
+strcpy(removernodo->auxpath,token);
+                    pat=false;
+                }
+
+            }
+            //termina comando rmdisk
             //printf("%s\n",token);
             token = strtok(NULL," ::");
 
+        }
+
+        if(rmdisk==true){
+            char comand[4];
+           strcpy(comand,"rm ");
+            system(strcat(comand,removernodo->auxpath));
+
+            free(removernodo);
+            rmdisk=false;
         }
 
         if(mkdisk==true&&nuevo->auxnombre!=""&&nuevo->auxpath!=""&&nuevo->tamanio>0){
@@ -101,6 +130,7 @@ mkdiskc *  nuevo=malloc(sizeof(mkdiskc));
         int i=1;
         archivo = fopen (strcat(nuevo->auxpath,nuevo->auxnombre), "wb+");
         //mkdisk -name::archivo.bin -size::10 +unit::k -path::/home/javier/Desktop/
+        //rmDisk -path::/home/javier/Desktop/archivo.bin
         //mkdisk -name::archivo.bin -size::5 -path::/home/javier/Desktop/
          //fprintf(archivo,"\%d",i);
 
@@ -109,7 +139,7 @@ mkdiskc *  nuevo=malloc(sizeof(mkdiskc));
         char pribin[3]="\0";
         //tamaño del disco
         for(i;i<=nuevo->tamanio;i++){
-        fwrite(pribin,1,sizeof(pribin),archivo);
+        fwrite(pribin,i,sizeof(pribin),archivo);
         fseek(archivo,i,SEEK_SET);
         }
         fclose(archivo);
