@@ -5,101 +5,128 @@
 void compiler();
 FILE *archivo;
 char comando[200];
+
+typedef struct mkdiskc{
+    char auxnombre[25];
+    char auxpath[100];
+    int tamanio;
+    char unidad;
+}mkdiskc;
+
+
 int main()
 {
-compiler();
-return 0;
+    compiler();
+    return 0;
 }
 
 void compiler(){
-int a=0;
+    int a=0;
 
-bool mkdisk=false;
-char auxnombre[25]="";
-int tamanio=-1;
-char auxpath[100]="";
-bool size=false;
-bool pat = false;
-bool name = false;
-bool creararchivo=false;
-while(a==0){
-fgets(comando,200,stdin);
+    bool mkdisk=false;
+mkdiskc *  nuevo=malloc(sizeof(mkdiskc));
+
+    char unidad;
+    bool size=false;
+    bool pat = false;
+    bool name = false;
+    bool unitb=false;
+    while(a==0){
+        fgets(comando,200,stdin);
 
 
-char* token;
-token  = strtok(comando," ");
-while(token!=NULL){
-if(strcasecmp(token,"mkdisk")==0){
-printf("Comando: mkdisk\n");
-mkdisk=true;
-}
+        char* token;
+        token  = strtok(comando," ");
+        while(token!=NULL){
 
-//si  mkdisk es true reconocer los sigientes comandos
-if(mkdisk==true){
-    //validar comandos
-    if(strcasecmp(token,"-size")==0){
-        size = true;
-    }else if(size==true){
-        tamanio=atoi(token);
-        //printf("el tamnio del disco es %d\n",tamanio);
-        size=false;
+            if(strcasecmp(token,"mkdisk")==0){
+                printf("Comando: mkdisk\n");
+                mkdisk=true;
+            }
+
+            //si  mkdisk es true reconocer los sigientes comandos
+            if(mkdisk==true){
+
+
+                //validar atributos
+                //atributo tamaño
+                if(strcasecmp(token,"-size")==0){
+                    size = true;
+                }else if(size==true){
+                    nuevo->tamanio=atoi(token);
+                    size=false;
+                }
+                //atributo nombre
+                if(strcasecmp(token,"-name")==0){
+                    name = true;
+                }else if(name==true){
+                    strcpy(nuevo->auxnombre,token);
+                    //strtok(nuevo->auxnombre,"");
+                    name=false;
+                }
+                //atributo path
+                if(strcasecmp(token,"-path")==0){
+                    pat = true;
+                }else if(pat==true){
+                    strcpy(nuevo->auxpath,token);
+
+                    pat=false;
+                }
+                //atributo unit
+                if(strcasecmp(token,"+unit")==0){
+                    unitb = true;
+                    nuevo->unidad='m';
+                }else if(unitb==true){
+                    strcpy(nuevo->unidad,token);
+
+                    unitb=false;
+                }
+
+            }
+
+            //termina comando mkdisk
+            //printf("%s\n",token);
+            token = strtok(NULL," ::");
+
+        }
+
+        if(mkdisk==true&&nuevo->auxnombre!=""&&nuevo->auxpath!=""&&nuevo->tamanio>0){
+        if(unidad=='k'){
+            nuevo->tamanio=nuevo->tamanio*1024;
+        }
+        else if(unidad=='m'){
+            nuevo->tamanio=nuevo->tamanio*1024*1024;
+        }else{
+                nuevo->tamanio=nuevo->tamanio*1024*1024;
+        }
+            printf("atributos listos:\n %s,%s,%d",nuevo->auxnombre,nuevo->auxpath,nuevo->tamanio);
+
+        int i=1;
+        archivo = fopen (strcat(nuevo->auxpath,nuevo->auxnombre), "wb+");
+        //mkdisk -name::archivo.bin -size::1 +unit::k -path::/home/javier/Desktop/
+        //mkdisk -name::"archivo.bin" -size::5 -path::"/home/javier/Desktop/"
+         //fprintf(archivo,"\%d",i);
+
+           //fclose(archivo);
+
+        char pribin[3]="\0";
+        //tamaño del disco
+        for(i;i<=nuevo->tamanio;i++){
+        fwrite(pribin,1,sizeof(pribin),archivo);
+        fseek(archivo,i,SEEK_SET);
+        }
+        fclose(archivo);
+        mkdisk=false;
+free(nuevo);
+
+        }else{
+            printf("error");
+        }
+
+
+
+
     }
-    //comando nombre
-    if(strcasecmp(token,"-name")==0){
-        name = true;
-    }else if(name==true){
-
-     strcpy(auxnombre,token);
-
-        //printf("el nombre del disco es %s\n",auxnombre);
-        name=false;
-    }
-        //comando path
-    if(strcasecmp(token,"-path")==0){
-        pat = true;
-    }else if(pat==true){
-
-strcpy(auxpath,token);
-//token=strtok(NULL,"\"");
-        //printf("el path del disco es %s\n",auxpath);
-        pat=false;
-//auxpath=strtok(NULL,"\"");
-    }
-if(mkdisk==true&&auxnombre!=""&&auxpath!=""&&tamanio!=-1){
-
-int i=1;
-archivo = fopen (strcat(auxpath,auxnombre), "wb+");
-//mkdisk -name::archivo.bin -size::100 -path::/home/javier/Documents/Archivos:V/-MIA-201313819/Proyecto/
- //fprintf(archivo, "\%d",i);
-
-   //fclose(archivo);
-
-char pribin[3]="\0";
-//tamaño del disco
-for(i;i<=tamanio;i++){
-fwrite(pribin,1,sizeof(pribin),archivo);
-fseek(archivo,i,SEEK_SET);
-}
-fclose(archivo);
-creararchivo=false;
-mkdisk=false;
-tamanio=-1;
-strcpy(auxnombre,"");
-strcpy(auxpath,"");
-strcpy(comando,"");
-
-}
-}
-
-//termina comando mkdisk
-//printf("%s\n",token);
-token = strtok(NULL," ::");
-
-}
-
-
-
-}
 }
 
 
