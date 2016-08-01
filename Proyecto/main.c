@@ -15,7 +15,16 @@ typedef struct mkdiskc{
 typedef struct rmdiskc{
     char auxpath[100];
 }rmdiskc;
-
+typedef struct fidskc{
+    int tamanio;
+    char unidad[3];
+    char auxpath[100];
+    char tipo[5];
+    char fit[3];
+    char borrar[7];
+    char auxnombre[25];
+    char anadir[25];
+}fdiskc;
 
 int main()
 {
@@ -28,6 +37,7 @@ void compiler(){
 
     bool mkdisk=false;
     bool rmdisk=false;
+    bool fdisk=false;
 mkdiskc *  nuevo=malloc(sizeof(mkdiskc));
 rmdiskc *  removernodo=malloc(sizeof(rmdiskc));
 
