@@ -12,9 +12,11 @@ typedef struct mkdiskc{
     int tamanio;
     char unidad[1];
 }mkdiskc;
+
 typedef struct rmdiskc{
     char auxpath[100];
 }rmdiskc;
+
 typedef struct fidskc{
     int tamanio;
     char unidad[3];
@@ -25,6 +27,25 @@ typedef struct fidskc{
     char auxnombre[25];
     char anadir[25];
 }fdiskc;
+
+typedef struct Mbrdisk{
+    int mbr_tamaño;
+    char mbr_fecha_creacion[17];
+    int mbr_disk_signature;
+    partition particion1;
+    partition particion2;
+    partition particion3;
+    partition particion4;
+}Mbrdisk;
+
+typedef struct partition{
+    char part_status[1];
+    char part_type[1];
+    char part_fit[2];
+    int part_start;
+    int part_size;
+    char part_name[16];
+}partition;
 
 int main()
 {
