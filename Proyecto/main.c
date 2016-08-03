@@ -29,13 +29,13 @@ typedef struct fidskc{
 }fdiskc;
 
 typedef struct Mbrdisk{
-    int mbr_tamaño;
+  /*  int mbr_tamaño;
     char mbr_fecha_creacion[17];
     int mbr_disk_signature;
     partition particion1;
     partition particion2;
     partition particion3;
-    partition particion4;
+    partition particion4;*/
 }Mbrdisk;
 
 typedef struct partition{
@@ -159,10 +159,22 @@ strcpy(removernodo->auxpath,token);
             printf("atributos listos:\n %s,%s,%d",nuevo->auxnombre,nuevo->auxpath,nuevo->tamanio);
 
         int i=1;
+
+
         archivo = fopen (strcat(nuevo->auxpath,nuevo->auxnombre), "wb+");
+        if(archivo==NULL){
+fclose(archivo);
+            char comao[100];
+            strcpy(comao,"mkdir -p ");
+
+            system(strcat(comao,strcat(nuevo->auxpath,nuevo->auxnombre)));
+            archivo=fopen (strcat(nuevo->auxpath,nuevo->auxnombre), "wb+");
+        }
+
         //mkdisk -name::archivo.bin -size::10 +unit::k -path::/home/javier/Desktop/
         //rmDisk -path::/home/javier/Desktop/archivo.bin
-        //mkdisk -name::archivo.bin -size::5 -path::/home/javier/Desktop/
+        //mkdisk -name::archivo.bin -size::25 -path::/home/javier/Desktop/pruebacarpeta/
+
          //fprintf(archivo,"\%d",i);
 
            //fclose(archivo);
@@ -174,6 +186,7 @@ strcpy(removernodo->auxpath,token);
         fseek(archivo,i,SEEK_SET);
         }
         fclose(archivo);
+
         mkdisk=false;
 free(nuevo);
 
