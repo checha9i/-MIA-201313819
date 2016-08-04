@@ -77,6 +77,7 @@ void compiler(){
     bool fit=false;
     bool deletee=false;
     bool addd=false;
+    bool error=false;
     /* loop del programa*/
     while(a==0){
         fgets(comando,200,stdin);
@@ -89,19 +90,19 @@ void compiler(){
                 printf("        -Comando: mkdisk-\n");
                 printf("***************************************\n");
                 mkdisk=true;
-            }
-            if(strcasecmp(token,"rmDisk")==0){
-                printf("***************************************\n");
-                printf("        -Comando: rmDisk-\n");
-                printf("***************************************\n");
-                rmdisk=true;
-            }
-            if(strcasecmp(token,"fdisk")==0){
-                printf("***************************************\n");
-                printf("        -Comando: fdisk-\n");
-                printf("***************************************\n");
-                fdisk=true;
-            }
+            }else
+                if(strcasecmp(token,"rmDisk")==0){
+                    printf("***************************************\n");
+                    printf("        -Comando: rmDisk-\n");
+                    printf("***************************************\n");
+                    rmdisk=true;
+                }else
+                    if(strcasecmp(token,"fdisk")==0){
+                        printf("***************************************\n");
+                        printf("        -Comando: fdisk-\n");
+                        printf("***************************************\n");
+                        fdisk=true;
+                    }
 
             //si  mkdisk es true reconocer los sigientes comandos
             if(mkdisk==true){
@@ -113,12 +114,17 @@ void compiler(){
                     size = true;
                 }else if(size==true){
                     nuevo->tamanio=atoi(token);
+                    if(nuevo->tamanio<=0){
+                        error=true;
+                    }
                     size=false;
                 }
                 //atributo nombre
                 if(strcasecmp(token,"-name")==0){
                     name = true;
                 }else if(name==true){
+                    printf("%d",sizeof(token));
+
                     strcpy(nuevo->auxnombre,token);
                     //strtok(nuevo->auxnombre,"");
                     name=false;
@@ -128,7 +134,6 @@ void compiler(){
                     pat = true;
                 }else if(pat==true){
                     strcpy(nuevo->auxpath,token);
-
                     pat=false;
                 }
                 //atributo unit
@@ -137,6 +142,9 @@ void compiler(){
                     strcpy(nuevo->unidad,"m");
                 }else if(unitb==true){
                     strcpy(nuevo->unidad,token);
+                    if(nuevo->unidad!="m"||nuevo->unidad!="k"){
+                        error=true;
+                    }
                     unitb=false;
                 }
 
@@ -144,10 +152,6 @@ void compiler(){
             /*termina comando mkdisk*/
 
             //comando rmdisk
-            if(strcasecmp(token,"rmDisk")==0){
-                printf("Comando: rmDisk\n");
-                rmdisk=true;
-            }
 
             if(rmdisk==true){
                 if(strcasecmp(token,"-path")==0){
@@ -161,11 +165,15 @@ void compiler(){
             /*termina comando rmdisk*/
 
             if(fdisk==true){
+                /*parametros fdisk*/
                 //atributo tamaño
                 if(strcasecmp(token,"-size")==0){
                     size = true;
                 }else if(size==true){
                     disk->tamanio=atoi(token);
+                    if(disk->tamanio<=0){
+                        error=true;
+                    }
                     size=false;
                 }
                 //atributo nombre
@@ -187,6 +195,9 @@ void compiler(){
                     unitb = true;
                 }else if(unitb==true){
                     strcpy(disk->unidad,token);
+                    if(disk->unidad!="M"||disk->unidad!="K"||disk->unidad!="B"){
+                        error=true;
+                    }
                     unitb=false;
                 }
                 //atributo type
@@ -194,6 +205,9 @@ void compiler(){
                     type = true;
                 }else if(type==true){
                     strcpy(disk->tipo,token);
+                    if(disk->tipo!="P"||disk->tipo!="E"||disk->tipo!="L"){
+                        error=true;
+                    }
                     type=false;
                 }
                 //atributo fit
@@ -201,6 +215,9 @@ void compiler(){
                     fit = true;
                 }else if(fit==true){
                     strcpy(disk->fit,token);
+                    if(strcasecmp(disk->fit,"BF")!=0||strcasecmp(disk->fit,"FF")!=0||strcasecmp(disk->fit,"WF")!=0){
+                        error=true;
+                    }
                     fit=false;
                 }
                 //atributo delete
@@ -208,6 +225,9 @@ void compiler(){
                     deletee = true;
                 }else if(deletee==true){
                     strcpy(disk->borrar,token);
+                    if(disk->borrar!="fast"||disk->borrar!="full"){
+                        error=true;
+                    }
                     deletee=false;
                 }
                 //atributo add
@@ -224,6 +244,24 @@ void compiler(){
 
             /*parseamos los dos puntos*/
             token = strtok(NULL," ::");
+
+            if(error==true){
+                printf("***************************************\n");
+                printf("     -Error Parametro-\n");
+                printf("***************************************\n");
+                mkdisk=false;
+                rmdisk=false;
+                fdisk=false;
+                error=false;
+                free(nuevo);
+                free(mbr);
+                free(removernodo);
+                free(disk);
+                disk=malloc(sizeof(fdiskc));
+                removernodo=malloc(sizeof(rmdiskc));
+                mbr=malloc(sizeof(Mbrdisk));
+                nuevo=malloc(sizeof(mkdiskc));
+            }
         }/*termina recorrido de token*/
 
 
@@ -289,12 +327,19 @@ void compiler(){
             free(nuevo);
             nuevo=malloc(sizeof(mkdiskc));
             mbr=malloc(sizeof(Mbrdisk));
-        }else{
-            printf("***************************************\n");
-            printf("        -Error en el comando- \n");
-            printf("***************************************\n");
         }
+        if(fdisk==true&&disk->tamanio>0&&disk->unidad!=""&&disk->auxpath!=""&&disk->tipo!=""&&disk->fit!=""&&disk->auxnombre!=""){
+            archivo=fopen(disk->auxpath,"r+");
+            if(archivo!=NULL){
+                fseek(archivo,0L,SEEK_SET);
 
+               fclose(archivo);
+            }else{
+               fclose(archivo);
+               error=true;
+            }
+            if(error=true){}
+        }
 
 
 
@@ -305,3 +350,4 @@ void compiler(){
 //mkdisk -name::archivo2.dsk -size::1024 +unit::k -path::/home/javier/Desktop/pruebacarpeta/
 //rmDisk -path::/home/javier/Desktop/archivo.bin
 //mkdisk -name::archivo.dsk -size::3 -path::/home/javier/Desktop/pruebacarpeta/
+//fdisk –Size::300 –path::"/home/javier/Desktop/pruebacarpeta/archivo.dsk" –name::"Particion1"
