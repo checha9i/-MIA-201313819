@@ -29,22 +29,19 @@ typedef struct fidskc{
     char anadir[25];
 }fdiskc;
 typedef struct partition{
-    char part_status[1];
-    char part_type[1];
-    char part_fit[2];
-    int part_start;
-    int part_size;
+    char part_status;
+    char part_type;
+    char *part_fit;
+    unsigned int part_start;
+    unsigned int part_size;
     char part_name[16];
 }partition;
 
 typedef struct Mbrdisk{
     int mbr_tamano;
-    char mbr_fecha_creacion[17];
+    time_t mbr_fecha_creacion;
     int mbr_disk_signature;
-    partition *particion;
-    partition *particion2;
-    partition *particion3;
-    partition *particion4;
+    partition mbr_partition[3];
 }Mbrdisk;
 /*termina definicion de structs*/
 
@@ -62,7 +59,6 @@ void compiler(){
     rmdiskc *  removernodo=malloc(sizeof(rmdiskc));
     Mbrdisk * mbr=malloc(sizeof(Mbrdisk));
     fdiskc * disk=malloc(sizeof(fdiskc));
-    struct tm *info;
     char unidad;
     /*banderas comandos*/
     bool mkdisk=false;
@@ -114,18 +110,16 @@ void compiler(){
                     size = true;
                 }else if(size==true){
                     nuevo->tamanio=atoi(token);
-                    if(nuevo->tamanio<=0){
-                        error=true;
-                    }
                     size=false;
                 }
                 //atributo nombre
                 if(strcasecmp(token,"-name")==0){
                     name = true;
                 }else if(name==true){
-                    printf("%d",sizeof(token));
+
 
                     strcpy(nuevo->auxnombre,token);
+strcat(nuevo->auxnombre,"\0");
                     //strtok(nuevo->auxnombre,"");
                     name=false;
                 }
@@ -134,6 +128,7 @@ void compiler(){
                     pat = true;
                 }else if(pat==true){
                     strcpy(nuevo->auxpath,token);
+                    strcat(nuevo->auxpath,"\0");
                     pat=false;
                 }
                 //atributo unit
@@ -142,9 +137,7 @@ void compiler(){
                     strcpy(nuevo->unidad,"m");
                 }else if(unitb==true){
                     strcpy(nuevo->unidad,token);
-                    if(nuevo->unidad!="m"||nuevo->unidad!="k"){
-                        error=true;
-                    }
+if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
                     unitb=false;
                 }
 
@@ -243,7 +236,7 @@ void compiler(){
             /*termina comando fdisk*/
 
             /*parseamos los dos puntos*/
-            token = strtok(NULL," ::");
+
 
             if(error==true){
                 printf("***************************************\n");
@@ -262,6 +255,7 @@ void compiler(){
                 mbr=malloc(sizeof(Mbrdisk));
                 nuevo=malloc(sizeof(mkdiskc));
             }
+        token = strtok(NULL," ::");
         }/*termina recorrido de token*/
 
 
@@ -279,19 +273,19 @@ void compiler(){
         }
 
         /*ejecutamos comando mkdisk*/
-        if(mkdisk==true&&nuevo->auxnombre!=""&&nuevo->auxpath!=""&&nuevo->tamanio>0&&(nuevo->unidad=="k"||nuevo->unidad=="m")){
+        if(mkdisk==true&&nuevo->auxnombre!=""&&nuevo->auxpath!=""&&nuevo->tamanio>0&&nuevo->unidad!=""){
 
             nuevo->tamanio=nuevo->tamanio*1024*1024;
             if(strcasecmp(nuevo->unidad,"k")==0){
                 nuevo->tamanio=nuevo->tamanio/1024;
             }
             int i=1;
-            archivo=fopen (strcat(nuevo->auxpath,nuevo->auxnombre), "wb+");
+            archivo=fopen (strncat(nuevo->auxpath,nuevo->auxnombre,100), "wb+");
             if(archivo==NULL){
                 fclose(archivo);
                 char comao[100];
                 strcpy(comao,"mkdir -p ");
-                system(strcat(comao,strcat(nuevo->auxpath,nuevo->auxnombre)));
+                system(strcat(comao,strncat(nuevo->auxpath,nuevo->auxnombre,100)));
                 archivo=fopen (nuevo->auxpath, "wb+");
             }
 
@@ -307,11 +301,21 @@ void compiler(){
             mbr->mbr_disk_signature=rand()%100+1;
             /*tiempo del sistema*/
             time_t tiempo;
+            struct tm *info;
             time(&tiempo);
             info=localtime(&tiempo);
-            strftime(mbr->mbr_fecha_creacion,17,"%x - %I:%M%p",info);
+            mbr->mbr_fecha_creacion=time(NULL);
+            //strftime(mbr->mbr_fecha_creacion,17,"%x - %I:%M%p",info);
             /*termina funcion time*/
             mbr->mbr_tamano=nuevo->tamanio;
+            int id=0;
+            for(id;id<=3;id++){
+            mbr->mbr_partition[id].part_fit=NULL;
+            mbr->mbr_partition[id].part_size=0;
+            mbr->mbr_partition[id].part_start=0;
+            mbr->mbr_partition[id].part_status=NULL;
+            mbr->mbr_partition[id].part_type=NULL;
+            }
             /*escribimos el mbr en el disco*/
             fseek(archivo,0L,SEEK_SET);
             fwrite(&mbr,sizeof(mbr),1,archivo);
@@ -320,10 +324,29 @@ void compiler(){
 
             printf("***************************************\n");
             printf("         -Disco %s Creado- \n",nuevo->auxnombre);
+            if(strcasecmp(nuevo->unidad,"k")==0){
+                printf("         -Tamaño:%d Kilobytes- \n",nuevo->tamanio/1024);
+            }else{
+                printf("         -Tamaño:%d Megabytes- \n",nuevo->tamanio/(1024*1024));
+            }
             printf("***************************************\n");
             /*Limpiamos variables y struct usados*/
+
+            /*prueba
+            printf("%s",nuevo->auxpath);
+            FILE *prueba=fopen(nuevo->auxpath,"r+");
+
+
+            Mbrdisk *temp;
+            fseek(prueba,0L,SEEK_SET);
+            fread(&temp,sizeof(Mbrdisk),1,prueba);
+            printf("%d,",temp->mbr_tamano);
+            printf("%d\n",temp->mbr_disk_signature);
+            fclose(prueba);
+            fin de prueba*/
+
             mkdisk=false;
-            free(mbr);
+         //   free(mbr);
             free(nuevo);
             nuevo=malloc(sizeof(mkdiskc));
             mbr=malloc(sizeof(Mbrdisk));
@@ -331,7 +354,62 @@ void compiler(){
         if(fdisk==true&&disk->tamanio>0&&disk->unidad!=""&&disk->auxpath!=""&&disk->tipo!=""&&disk->fit!=""&&disk->auxnombre!=""){
             archivo=fopen(disk->auxpath,"r+");
             if(archivo!=NULL){
+                Mbrdisk *temp;
                 fseek(archivo,0L,SEEK_SET);
+                fread(&temp,sizeof(Mbrdisk),1,archivo);
+int tamanodisco;
+tamanodisco=temp->mbr_tamano-sizeof(Mbrdisk);
+if(disk->tamanio<=tamanodisco){
+if(temp->mbr_partition[0].part_size==0){
+    /*tipo*/
+    if(strcasecmp(disk->tipo,"p")==0){
+        strcpy(temp->mbr_partition[0].part_type,"p");
+    }
+    else if(strcasecmp(disk->tipo,"e")==0){
+        strcpy(temp->mbr_partition[0].part_type,"e");
+    }
+    else if(strcasecmp(disk->tipo,"l")==0){
+        strcpy(temp->mbr_partition[0].part_type,"l");
+    }
+    /*fit*/
+    if(strcasecmp(temp->mbr_partition[0].part_fit,"BF")==0){
+        strcpy(temp->mbr_partition[0].part_fit,"BF");
+    }
+    else if(strcasecmp(temp->mbr_partition[0].part_fit,"FF")==0){
+        strcpy(temp->mbr_partition[0].part_fit,"FF");
+    }
+    else if(strcasecmp(temp->mbr_partition[0].part_fit,"WF")==0){
+        strcpy(temp->mbr_partition[0].part_fit,"WF");
+    }
+    /*unidad y tamaño*/
+    if(strcasecmp(disk->unidad,"B")==0){
+        temp->mbr_partition[0].part_size=disk->tamanio;
+    } else if(strcasecmp(disk->unidad,"K")==0){
+        temp->mbr_partition[0].part_size=disk->tamanio*1024;
+    } else if(strcasecmp(disk->unidad,"M")==0){
+                temp->mbr_partition[0].part_size=disk->tamanio*1024*1024;
+    }
+    /**/
+//    temp->mbr_partition[0].part_start
+
+}else if(temp->mbr_partition[1].part_size==0){
+
+}
+else if(temp->mbr_partition[2].part_size==0){
+
+}
+else if(temp->mbr_partition[3].part_size==0){
+
+}
+else{
+    printf("***************************************\n");
+    printf("     -Ninguna Particion Disponible-");
+    printf("***************************************\n");
+}
+}
+else{
+error=true;
+}
 
                fclose(archivo);
             }else{
@@ -349,5 +427,5 @@ void compiler(){
 
 //mkdisk -name::archivo2.dsk -size::1024 +unit::k -path::/home/javier/Desktop/pruebacarpeta/
 //rmDisk -path::/home/javier/Desktop/archivo.bin
-//mkdisk -name::archivo.dsk -size::3 -path::/home/javier/Desktop/pruebacarpeta/
+//mkdisk -name::archivo.dsk -path::/home/javier/Desktop/pruebacarpeta/ -size::3
 //fdisk –Size::300 –path::"/home/javier/Desktop/pruebacarpeta/archivo.dsk" –name::"Particion1"

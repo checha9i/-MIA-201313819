@@ -1,7 +1,8 @@
 # depslib dependency file v1.0
-1469804948 source:/home/javier/Documents/Archivos:V/-MIA-201313819/Proyecto/main.c
+1470290011 source:/home/javier/Documents/Archivos:V/-MIA-201313819/Proyecto/main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<stdbool.h>
+	<time.h>
 
