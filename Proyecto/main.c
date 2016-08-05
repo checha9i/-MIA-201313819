@@ -346,7 +346,7 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
             fin de prueba*/
 
             mkdisk=false;
-         //   free(mbr);
+            //free(mbr);
             free(nuevo);
             nuevo=malloc(sizeof(mkdiskc));
             mbr=malloc(sizeof(Mbrdisk));
@@ -390,7 +390,7 @@ if(temp->mbr_partition[0].part_size==0){
                 temp->mbr_partition[0].part_size=disk->tamanio*1024*1024;
     }
     /**/
-//    temp->mbr_partition[0].part_start
+    //temp->mbr_partition[0].part_start
 
 }else if(temp->mbr_partition[1].part_size==0){
 
