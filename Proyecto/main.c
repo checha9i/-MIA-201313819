@@ -10,7 +10,7 @@ char comando[200];
 typedef struct mkdiskc{
     char auxnombre[25];
     char auxpath[100];
-    int tamanio;
+    unsigned int tamanio;
     char unidad[1];
 }mkdiskc;
 
@@ -110,6 +110,7 @@ void compiler(){
                     size = true;
                 }else if(size==true){
                     nuevo->tamanio=atoi(token);
+           nuevo->tamanio=nuevo->tamanio*1024*1024;
                     size=false;
                 }
                 //atributo nombre
@@ -273,13 +274,14 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
         }
 
         /*ejecutamos comando mkdisk*/
-        if(mkdisk==true&&nuevo->auxnombre!=""&&nuevo->auxpath!=""&&nuevo->tamanio>0&&nuevo->unidad!=""){
+        if(mkdisk==true&&nuevo->auxnombre!=""&&nuevo->auxpath!=""&&nuevo->tamanio>10485759&&nuevo->unidad!=""){
 
-            nuevo->tamanio=nuevo->tamanio*1024*1024;
+
+
             if(strcasecmp(nuevo->unidad,"k")==0){
                 nuevo->tamanio=nuevo->tamanio/1024;
             }
-            int i=1;
+            int i=0;
             archivo=fopen (strncat(nuevo->auxpath,nuevo->auxnombre,100), "wb+");
             if(archivo==NULL){
                 fclose(archivo);
@@ -329,6 +331,7 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
             }else{
                 printf("         -Tamaño:%d Megabytes- \n",nuevo->tamanio/(1024*1024));
             }
+
             printf("***************************************\n");
             /*Limpiamos variables y struct usados*/
 
@@ -351,7 +354,8 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
             nuevo=malloc(sizeof(mkdiskc));
             mbr=malloc(sizeof(Mbrdisk));
         }
-        if(fdisk==true&&disk->tamanio>0&&disk->unidad!=""&&disk->auxpath!=""&&disk->tipo!=""&&disk->fit!=""&&disk->auxnombre!=""){
+        if(fdisk==true/*&&disk->tamanio>0&&disk->auxpath!=""&&disk->auxnombre!=""*/){
+            printf("leyendo archivo");
             archivo=fopen(disk->auxpath,"r+");
             if(archivo!=NULL){
                 Mbrdisk *temp;
@@ -360,54 +364,61 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
 int tamanodisco;
 tamanodisco=temp->mbr_tamano-sizeof(Mbrdisk);
 if(disk->tamanio<=tamanodisco){
-if(temp->mbr_partition[0].part_size==0){
+
     /*tipo*/
+    bool correcto=false;
+    int init=0;
+    for(init;init<=3;init++){
+        if(temp->mbr_partition[0].part_size==0){
     if(strcasecmp(disk->tipo,"p")==0){
-        strcpy(temp->mbr_partition[0].part_type,"p");
+        strcpy(temp->mbr_partition[init].part_type,"p");
     }
     else if(strcasecmp(disk->tipo,"e")==0){
-        strcpy(temp->mbr_partition[0].part_type,"e");
+        strcpy(temp->mbr_partition[init].part_type,"e");
     }
     else if(strcasecmp(disk->tipo,"l")==0){
-        strcpy(temp->mbr_partition[0].part_type,"l");
+        strcpy(temp->mbr_partition[init].part_type,"l");
     }
+
     /*fit*/
-    if(strcasecmp(temp->mbr_partition[0].part_fit,"BF")==0){
-        strcpy(temp->mbr_partition[0].part_fit,"BF");
+    if(strcasecmp(disk->fit,"BF")==0){
+        strcpy(temp->mbr_partition[init].part_fit,"BF");
     }
-    else if(strcasecmp(temp->mbr_partition[0].part_fit,"FF")==0){
-        strcpy(temp->mbr_partition[0].part_fit,"FF");
+    else if(strcasecmp(disk->fit,"FF")==0){
+        strcpy(temp->mbr_partition[init].part_fit,"FF");
     }
-    else if(strcasecmp(temp->mbr_partition[0].part_fit,"WF")==0){
-        strcpy(temp->mbr_partition[0].part_fit,"WF");
+    else if(strcasecmp(disk->fit,"WF")==0){
+        strcpy(temp->mbr_partition[init].part_fit,"WF");
     }
+
     /*unidad y tamaño*/
     if(strcasecmp(disk->unidad,"B")==0){
-        temp->mbr_partition[0].part_size=disk->tamanio;
+        temp->mbr_partition[init].part_size=disk->tamanio;
     } else if(strcasecmp(disk->unidad,"K")==0){
-        temp->mbr_partition[0].part_size=disk->tamanio*1024;
+        temp->mbr_partition[init].part_size=disk->tamanio*1024;
     } else if(strcasecmp(disk->unidad,"M")==0){
-                temp->mbr_partition[0].part_size=disk->tamanio*1024*1024;
+                temp->mbr_partition[init].part_size=disk->tamanio*1024*1024;
     }
     /**/
     //temp->mbr_partition[0].part_start
-
-}else if(temp->mbr_partition[1].part_size==0){
-
+    fseek(archivo,sizeof(Mbrdisk)+1,SEEK_SET);
+    char l;
+    int tini=sizeof(Mbrdisk)+1;
+    for(tini;tini<=temp->mbr_tamano;tini++){
+        fseek(archivo,tini,SEEK_SET);
+        fread(&l,tini,1,archivo);
+    if(l=="\0"){
+        printf("nulo");
+    }
 }
-else if(temp->mbr_partition[2].part_size==0){
-
 }
-else if(temp->mbr_partition[3].part_size==0){
 
-}
-else{
     printf("***************************************\n");
     printf("     -Ninguna Particion Disponible-");
     printf("***************************************\n");
+
 }
-}
-else{
+}else{
 error=true;
 }
 
@@ -428,4 +439,4 @@ error=true;
 //mkdisk -name::archivo2.dsk -size::1024 +unit::k -path::/home/javier/Desktop/pruebacarpeta/
 //rmDisk -path::/home/javier/Desktop/archivo.bin
 //mkdisk -name::archivo.dsk -path::/home/javier/Desktop/pruebacarpeta/ -size::3
-//fdisk –Size::300 –path::"/home/javier/Desktop/pruebacarpeta/archivo.dsk" –name::"Particion1"
+//fdisk –Size::300 –path::/home/javier/Desktop/pruebacarpeta/archivo.dsk –name::Particion1
