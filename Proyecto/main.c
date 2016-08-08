@@ -74,6 +74,19 @@ void compiler(){
     bool deletee=false;
     bool addd=false;
     bool error=false;
+    /*banderas errores*/
+    bool errormkdisk;
+    bool errorrmdisk;
+    bool errorfdisk;
+    bool esize;
+    bool epat;
+    bool ename;
+    bool eunit;
+    bool etype;
+    bool efit;
+    bool edelete;
+    bool eadd;
+
     /* loop del programa*/
     while(a==0){
         fgets(comando,200,stdin);
@@ -138,7 +151,8 @@ strcat(nuevo->auxnombre,"\0");
                     strcpy(nuevo->unidad,"m");
                 }else if(unitb==true){
                     strcpy(nuevo->unidad,token);
-if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
+if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;
+eunit=true;}
                     unitb=false;
                 }
 
@@ -167,6 +181,7 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
                     disk->tamanio=atoi(token);
                     if(disk->tamanio<=0){
                         error=true;
+                        esize=true;
                     }
                     size=false;
                 }
@@ -189,8 +204,9 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
                     unitb = true;
                 }else if(unitb==true){
                     strcpy(disk->unidad,token);
-                    if(disk->unidad!="M"||disk->unidad!="K"||disk->unidad!="B"){
+                    if(strcasecmp(disk->unidad,"M")==0||strcasecmp(disk->unidad,"K")==0||strcasecmp(disk->unidad,"B")==0){
                         error=true;
+                        eunit=true;
                     }
                     unitb=false;
                 }
@@ -199,8 +215,9 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
                     type = true;
                 }else if(type==true){
                     strcpy(disk->tipo,token);
-                    if(disk->tipo!="P"||disk->tipo!="E"||disk->tipo!="L"){
+                    if(strcasecmp(disk->tipo,"P")==0||strcasecmp(disk->tipo,"E")==0||strcasecmp(disk->tipo,"L")==0){
                         error=true;
+                        etype=true;
                     }
                     type=false;
                 }
@@ -211,6 +228,7 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
                     strcpy(disk->fit,token);
                     if(strcasecmp(disk->fit,"BF")!=0||strcasecmp(disk->fit,"FF")!=0||strcasecmp(disk->fit,"WF")!=0){
                         error=true;
+                        efit=true;
                     }
                     fit=false;
                 }
@@ -221,6 +239,7 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
                     strcpy(disk->borrar,token);
                     if(disk->borrar!="fast"||disk->borrar!="full"){
                         error=true;
+                        edelete=true;
                     }
                     deletee=false;
                 }
@@ -242,6 +261,34 @@ if(nuevo->unidad!="m"||nuevo->unidad!="k"){error=true;}
             if(error==true){
                 printf("***************************************\n");
                 printf("     -Error Parametro-\n");
+                if(edelete==true){
+                    printf(" -Error en delete-\n");
+                    edelete=false;
+                }
+                if(efit==true){
+                    printf(" -Error en fit-\n");
+                    efit=false;
+                }
+                if(ename==true){
+                    printf(" -Error en name-\n");
+                    ename=false;
+                }
+                if(epat==true){
+                    printf(" -Error en path-\n");
+                    epat=false;
+                }
+                if(esize==true){
+                    printf(" -Error en size-\n");
+                    esize=false;
+                }
+                if(etype==true){
+                    printf(" -Error en type-\n");
+                    etype=false;
+                }
+                if(eunit==true){
+                    printf(" -Error en unit-\n");
+                    eunit=false;
+                }
                 printf("***************************************\n");
                 mkdisk=false;
                 rmdisk=false;
@@ -406,10 +453,8 @@ if(disk->tamanio<=tamanodisco){
     int tini=sizeof(Mbrdisk)+1;
     for(tini;tini<=temp->mbr_tamano;tini++){
         fseek(archivo,tini,SEEK_SET);
-        fread(&l,tini,1,archivo);
-    if(l=="\0"){
-        printf("nulo");
-    }
+        fread(&l,1,1,archivo);
+    printf("%c",l);
 }
 }
 
@@ -424,7 +469,7 @@ error=true;
 
                fclose(archivo);
             }else{
-               fclose(archivo);
+
                error=true;
             }
             if(error=true){}
