@@ -18,7 +18,7 @@ typedef struct rmdiskc{
     char auxpath[100];
 }rmdiskc;
 
-typedef struct fidskc{
+typedef struct fdiskc{
     int tamanio;
     char unidad[3];
     char auxpath[100];
@@ -74,6 +74,7 @@ void compiler(){
     bool deletee=false;
     bool addd=false;
     bool error=false;
+    bool fsize=false;
     /*banderas errores*/
     bool errormkdisk;
     bool errorrmdisk;
@@ -175,15 +176,16 @@ eunit=true;}
             if(fdisk==true){
                 /*parametros fdisk*/
                 //atributo tamaño
-                if(strcasecmp(token,"-size")==0){
-                    size = true;
-                }else if(size==true){
+                if(strncasecmp(token,"-size",5)==0){
+                    fsize = true;
+                }else if(fsize==true){
                     disk->tamanio=atoi(token);
+
                     if(disk->tamanio<=0){
                         error=true;
                         esize=true;
                     }
-                    size=false;
+                    fsize=false;
                 }
                 //atributo nombre
                 if(strcasecmp(token,"-name")==0){
@@ -202,6 +204,7 @@ eunit=true;}
                 //atributo unit
                 if(strcasecmp(token,"+unit")==0){
                     unitb = true;
+                    strcpy(disk->unidad,"K");
                 }else if(unitb==true){
                     strcpy(disk->unidad,token);
                     if(strcasecmp(disk->unidad,"M")==0||strcasecmp(disk->unidad,"K")==0||strcasecmp(disk->unidad,"B")==0){
@@ -401,10 +404,11 @@ eunit=true;}
             nuevo=malloc(sizeof(mkdiskc));
             mbr=malloc(sizeof(Mbrdisk));
         }
-        if(fdisk==true/*&&disk->tamanio>0&&disk->auxpath!=""&&disk->auxnombre!=""*/){
-            printf("leyendo archivo");
+        if(fdisk==true&&disk->tamanio>0&&disk->auxpath!=""&&disk->auxnombre!=""){
+
             archivo=fopen(disk->auxpath,"r+");
-            if(archivo!=NULL){
+            if(archivo){
+                printf("leyendo archivo");
                 Mbrdisk *temp;
                 fseek(archivo,0L,SEEK_SET);
                 fread(&temp,sizeof(Mbrdisk),1,archivo);
@@ -412,11 +416,14 @@ int tamanodisco;
 tamanodisco=temp->mbr_tamano-sizeof(Mbrdisk);
 if(disk->tamanio<=tamanodisco){
 
+    /*llenamos el mbr_partition*/
+
+    printf("si tiene algo");
     /*tipo*/
     bool correcto=false;
     int init=0;
     for(init;init<=3;init++){
-        if(temp->mbr_partition[0].part_size==0){
+        if(temp->mbr_partition[init].part_size==0){
     if(strcasecmp(disk->tipo,"p")==0){
         strcpy(temp->mbr_partition[init].part_type,"p");
     }
@@ -447,15 +454,8 @@ if(disk->tamanio<=tamanodisco){
                 temp->mbr_partition[init].part_size=disk->tamanio*1024*1024;
     }
     /**/
-    //temp->mbr_partition[0].part_start
-    fseek(archivo,sizeof(Mbrdisk)+1,SEEK_SET);
-    char l;
-    int tini=sizeof(Mbrdisk)+1;
-    for(tini;tini<=temp->mbr_tamano;tini++){
-        fseek(archivo,tini,SEEK_SET);
-        fread(&l,1,1,archivo);
-    printf("%c",l);
-}
+
+
 }
 
     printf("***************************************\n");
@@ -484,4 +484,4 @@ error=true;
 //mkdisk -name::archivo2.dsk -size::1024 +unit::k -path::/home/javier/Desktop/pruebacarpeta/
 //rmDisk -path::/home/javier/Desktop/archivo.bin
 //mkdisk -name::archivo.dsk -path::/home/javier/Desktop/pruebacarpeta/ -size::3
-//fdisk –Size::300 –path::/home/javier/Desktop/pruebacarpeta/archivo.dsk –name::Particion1
+//fdisk –size::300 –path::/home/javier/Desktop/pruebacarpeta/archivo.dsk –name::Particion1
