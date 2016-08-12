@@ -49,12 +49,14 @@ typedef struct Mount{
     char auxpath[100];
     char auxnombre[25];
 }Mount;
+typedef struct Umount{
+    char id[10];
+}Umount;
 
 typedef struct mountpart{
-    char nombreDisco[25];
+    char iddisk[25];
     char pathDisco[100];
     char nombrepart[16];
-    char id[10];
 }mountpart;
 /*termina definicion de structs*/
 
@@ -75,51 +77,25 @@ void compiler(){
     rmdiskc   removernodo;
     Mbrdisk  mbr;
     Mount montar;
+    Umount umontar;
     fdiskc  disk;
     char unidad;
     mountpart particionesmontadas[27][100];
     int letras=0;
-    for(letras;letras<=27;letras++){
+    /*for(letras;letras<=27;letras++){
         int numero=0;
         for(numero;numero<=100;numero++){
-            strcpy(particionesmontadas[letras][numero].id,"");
 
         }
-    }
+    }*/
     char abecedario[27];
-    /*lleno vector abecedario*/
-    abecedario[0]='a';
-    abecedario[1]='b';
-    abecedario[2]='c';
-    abecedario[3]='d';
-    abecedario[4]='e';
-    abecedario[5]='f';
-    abecedario[6]='g';
-    abecedario[7]='h';
-    abecedario[8]='i';
-    abecedario[9]='j';
-    abecedario[10]='k';
-    abecedario[11]='l';
-    abecedario[12]='m';
-    abecedario[13]='n';
-    abecedario[14]='ñ';
-    abecedario[15]='o';
-    abecedario[16]='p';
-    abecedario[17]='q';
-    abecedario[18]='r';
-    abecedario[19]='s';
-    abecedario[20]='t';
-    abecedario[21]='u';
-    abecedario[22]='v';
-    abecedario[23]='w';
-    abecedario[24]='x';
-    abecedario[25]='y';
-    abecedario[26]='z';
+
     /*banderas comandos*/
     bool mkdisk=false;
     bool rmdisk=false;
     bool fdisk=false;
     bool mount=false;
+    bool umount=false;
     /*banderas parametros*/
     bool size=false;
     bool pat = false;
@@ -131,6 +107,7 @@ void compiler(){
     bool addd=false;
     bool error=false;
     bool fsize=false;
+    bool id=false;
     /*banderas errores*/
     bool errormkdisk=false;
     bool errorrmdisk=false;
@@ -153,6 +130,9 @@ void compiler(){
         token  = strtok(comando," ");
         /*ya teniendo el token lo recorremos*/
         while(token!=NULL){
+            if(strncasecmp(token,"#",1)==0){
+                break;
+            }
             if(strcasecmp(token,"mkdisk")==0){
                 printf("***************************************\n");
                 printf("        -Comando: mkdisk-\n");
@@ -174,6 +154,12 @@ void compiler(){
             if(strcasecmp(token,"mount")==0){
                 printf("***************************************\n");
                 printf("        -Comando: mount-\n");
+                printf("***************************************\n");
+                mount=true;
+            }
+            else if(strcasecmp(token,"umount")==0){
+                printf("***************************************\n");
+                printf("        -Comando: umount-\n");
                 printf("***************************************\n");
                 mount=true;
             }
@@ -237,6 +223,7 @@ void compiler(){
             }
             /*termina comando rmdisk*/
 /*mount*/
+
             if(mount==true){
                 if(strcasecmp(token,"-path")==0){
                     pat = true;
@@ -252,7 +239,15 @@ void compiler(){
                     name=false;
                 }
             }
-
+/*umount*/
+            if(umount==true){
+                if(strcasecmp(token,"-id")==0){
+                      id = true;
+                }else if(id==true){
+                    strcpy(umontar.id,token);
+                    id=false;
+                }
+}
             /*fdisk*/
             if(fdisk==true){
                 /*parametros fdisk*/
@@ -271,9 +266,20 @@ void compiler(){
                     fsize=false;
                 }
                 //atributo nombre
-                if(strcasecmp(token,"-name")==0){
+               if(strcasecmp(token,"-name")==0){
                     name = true;
                 }else if(name==true){
+                    char nuevotoken[25];
+                    bool comilla=false;
+                    if(strncasecmp(token,"\"",1)==0){
+                        strcpy(nuevotoken,token);
+                        int letter=1;
+                        for(letter;letter<=25;letter++){
+                            disk.auxnombre[letter-1]=disk.auxnombre[letter];
+                        }
+                      comilla=true;
+                    }
+
                     strcpy(disk.auxnombre,token);
                     strcat(disk.auxnombre,"\0");
                     printf("Nombre: %s\n",disk.auxnombre);
@@ -391,6 +397,8 @@ void compiler(){
                 error=false;
             }
             token = strtok(NULL," ::");
+
+
         }/*termina recorrido de token*/
 
 
@@ -468,7 +476,7 @@ void compiler(){
             printf("***************************************\n");
             printf("         -Disco %s Creado- \n",nuevo.auxnombre);
             if(strcasecmp(nuevo.unidad,"k")==0){
-                printf("         -Tamaño:%d Kilobytes- \n",nuevo.tamanio/1024);
+                printf("         -Tamaño:%d Kilobytes- \n",nuevo.tamanio/1024);s
             }else{
                 printf("         -Tamaño:%d Megabytes- \n",nuevo.tamanio/(1024*1024));
 
@@ -628,22 +636,128 @@ void compiler(){
 
 
         }/*termina fdisk*/
-
+int estadopart=0;
         if(montar.auxnombre!=""&&montar.auxpath!=""&&mount==true){
+            archivo=fopen(montar.auxpath,"r+");
+            if(archivo!=NULL){
+
+            Mbrdisk temp;
+            fseek(archivo,0L,SEEK_SET);
+            fread(&temp,sizeof(Mbrdisk),1,archivo);
+            int nopart=0;
+            bool existe=false;
+for(nopart;nopart<4;nopart++){
+    if(strcasecmp(temp.mbr_partition[nopart].part_name,montar.auxnombre)==0){
+        existe=true;
+        break;
+    }else{
+        printf("%s,%s\n",montar.auxnombre,temp.mbr_partition[nopart].part_name);
+    }
+}
+
+if(existe==false){
             int letras1=0;
             for(letras1;letras1<=27;letras1++){
-                int numero1=0;
-                for(numero1;numero1<=100;numero1++){
-                    if(particionesmontadas[letras1][numero1].id==""){
-                        strcpy(particionesmontadas[letras1][numero1].id,"vd");
-                        strcat(particionesmontadas[letras1][numero1].id,abecedario[letras1]);
-                        strcat(particionesmontadas[letras1][numero1].id,numero1);
-                    }
-                }
-            }
-            mount=false;
-        }else if(mount==true){
 
+    int numero1=1;
+                for(numero1;numero1<=100;numero1++){
+                    if(strcasecmp(particionesmontadas[letras1][1].pathDisco,"")!=0&&strcasecmp(particionesmontadas[letras1][1].pathDisco,montar.auxpath)!=0){
+                        break;
+                    }
+                    if(strcasecmp(particionesmontadas[letras1][numero1].iddisk,"")==0){
+                        strcpy(particionesmontadas[letras1][numero1].iddisk,"vd");
+                        /*añadimos la letra del disco*/
+                        if(letras1==0){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"a");
+                        }
+                        else if(letras1==1){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"b");
+                        }                        else if(letras1==2){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"c");
+                        }                        else if(letras1==3){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"d");
+                        }                        else if(letras1==4){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"e");
+                        }                        else if(letras1==5){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"f");
+                        }                        else if(letras1==6){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"g");
+                        }                        else if(letras1==7){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"h");
+                        }                        else if(letras1==8){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"i");
+                        }                        else if(letras1==9){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"j");
+                        }                        else if(letras1==10){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"k");
+                        }                        else if(letras1==11){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"l");
+                        }                        else if(letras1==12){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"m");
+                        }                        else if(letras1==13){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"n");
+                        }                        else if(letras1==14){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"o");
+                        }                        else if(letras1==15){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"p");
+                        }                        else if(letras1==16){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"q");
+                        }                        else if(letras1==17){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"r");
+                        }                        else if(letras1==18){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"s");
+                        }                        else if(letras1==19){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"t");
+                        }                        else if(letras1==20){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"u");
+                        }                        else if(letras1==21){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"v");
+                        }                        else if(letras1==22){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"w");
+                        }                        else if(letras1==23){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"x");
+                        }                        else if(letras1==24){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"y");
+                        }                        else if(letras1==25){
+                            strcat(particionesmontadas[letras1][numero1].iddisk,"z");
+                        }
+                        /**/
+                        char cadena1[3];
+                        sprintf(cadena1, "%d", numero1);
+                        strcat(particionesmontadas[letras1][numero1].iddisk,cadena1);
+                        strcpy(particionesmontadas[letras1][numero1].pathDisco,montar.auxpath);
+                        strcpy(particionesmontadas[letras1][numero1].nombrepart,montar.auxnombre);
+                        estadopart=1;
+
+                        break;
+                    }
+
+                }
+
+                if(estadopart==1){
+                    estadopart=0;
+                    break;
+                }
+            }//for letras1
+}else{
+    printf("**********************************\n No existe la particion\n");
+}//existe
+existe=false;
+}//lectura archivo
+            mount=false;
+
+        }else if(mount==true&&strcasecmp(montar.auxnombre,"")==0&&strcasecmp(montar.auxpath,"")==0){
+int letras=0;
+        printf("Particiones Montadas:\n");
+for(letras;letras<=26;letras){
+int numero=0;
+for(numero;numero<=100;numero++){
+    if(strcasecmp(particionesmontadas[letras][numero].iddisk,"")==0){
+    }else{
+        printf("Nombre: %s, Id:%s\n",particionesmontadas[letras][numero].nombrepart,particionesmontadas[letras][numero].iddisk);
+    }
+}
+}
             mount=false;
         }
 
@@ -653,5 +767,6 @@ void compiler(){
 
 //mkdisk -name::archivo2.dsk -size::1024 +unit::k -path::"/home/javier/Desktop/p ruebacarpeta/"
 //rmDisk -path::/home/javier/Desktop/archivo.bin
-//mkdisk -name::archivo.dsk -path::/home/javier/Desktop/pruebacarpeta/ -size::10
-//fdisk -path::/home/javier/Desktop/pruebacarpeta/archivo.dsk -name::Particion2 -size::150 -type::e
+//mkdisk -name::archivo2.dsk -path::/home/javier/Desktop/pruebacarpeta/ -size::10
+//fdisk -path::/home/javier/Desktop/pruebacarpeta/archivo.dsk -name::Particion1 -size::200
+//mount -path::/home/javier/Desktop/pruebacarpeta/archivo.dsk -name::Particion1
